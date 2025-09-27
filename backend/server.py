@@ -1834,8 +1834,12 @@ async def send_internal_notification_email(submission_data: dict, customer_name:
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
+async def api_root():
+    return {"message": "API is working", "status": "success"}
+
+@api_router.get("/health")
+async def health_check():
+    return {"status": "healthy", "message": "Server is running"}
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check():
@@ -1899,6 +1903,11 @@ async def get_status_checks():
         return [StatusCheck(**status_check) for status_check in status_checks]
     else:
         return [StatusCheck(message="Demo mode - no database")]
+
+# Add root route
+@app.get("/")
+async def root():
+    return {"message": "Cashifygcmart Backend API", "version": "1.0.0"}
 
 # Include the router in the main app
 app.include_router(api_router)
