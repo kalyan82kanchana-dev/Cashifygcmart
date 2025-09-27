@@ -1907,7 +1907,12 @@ async def get_status_checks():
 # Add root route
 @app.get("/")
 async def root():
-    return {"message": "Cashifygcmart Backend API", "version": "1.0.0"}
+    return {"message": "Cashifygcmart Backend API", "version": "1.0.0", "status": "running"}
+
+# Add a simple health check for Railway
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "message": "Server is running", "timestamp": datetime.now().isoformat()}
 
 # Include the router in the main app
 app.include_router(api_router)
@@ -1926,6 +1931,12 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+@app.on_event("startup")
+async def startup_event():
+    print("🚀 Cashifygcmart Backend API starting up...")
+    print(f"📊 MongoDB connection: {'✅ Connected' if db else '⚠️ Demo mode'}")
+    print(f"🌐 CORS origins: {os.environ.get('CORS_ORIGINS', '*')}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

@@ -35,4 +35,4 @@ WORKDIR /app/backend
 EXPOSE 8001
 
 # Start the application
-CMD ["sh", "-c", "python3 -m uvicorn server:app --host 0.0.0.0 --port ${PORT:-8001}"]
+CMD ["python3", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001"]
