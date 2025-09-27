@@ -18,7 +18,7 @@ RUN yarn build
 RUN yarn global add serve
 
 # Expose port
-EXPOSE $PORT
+EXPOSE 3000
 
 # Start the application
-CMD serve -s build -l $PORT
+CMD ["sh", "-c", "serve -s build -l ${PORT:-3000}"]
