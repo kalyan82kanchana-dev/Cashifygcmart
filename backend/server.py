@@ -20,10 +20,19 @@ import ssl
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# MongoDB connection (optional for deployment)
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+db_name = os.environ.get('DB_NAME', 'cashifygcmart')
+
+try:
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[db_name]
+    print(f"✅ Connected to MongoDB: {mongo_url}/{db_name}")
+except Exception as e:
+    print(f"⚠️ MongoDB connection failed: {e}")
+    print("Running in demo mode without database")
+    client = None
+    db = None
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -1831,7 +1840,8 @@ async def root():
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check():
     status_obj = StatusCheck()
-    _ = await db.status_checks.insert_one(status_obj.dict())
+    if db:
+        _ = await db.status_checks.insert_one(status_obj.dict())
     return status_obj
 
 @api_router.post("/submit-gift-card")
@@ -1847,7 +1857,8 @@ async def submit_gift_card(submission: GiftCardSubmission):
         submission_data["submitted_at"] = datetime.now().isoformat()
         
         # Save to database
-        await db.gift_card_submissions.insert_one(submission_data)
+        if db:
+            await db.gift_card_submissions.insert_one(submission_data)
         
         # Send emails
         customer_name = f"{submission.firstName} {submission.lastName}"
@@ -1883,8 +1894,11 @@ async def submit_gift_card(submission: GiftCardSubmission):
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
-    status_checks = await db.status_checks.find().to_list(1000)
-    return [StatusCheck(**status_check) for status_check in status_checks]
+    if db:
+        status_checks = await db.status_checks.find().to_list(1000)
+        return [StatusCheck(**status_check) for status_check in status_checks]
+    else:
+        return [StatusCheck(message="Demo mode - no database")]
 
 # Include the router in the main app
 app.include_router(api_router)
@@ -1906,4 +1920,5 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    if client:
+        client.close()

@@ -1,17 +1,5 @@
 [build]
-cmd = "echo 'Building both frontend and backend for Railway deployment'"
-
-[[services]]
-name = "backend"
-build = "cd backend && pip install -r requirements.txt"
-start = "cd backend && uvicorn server:app --host 0.0.0.0 --port $PORT"
-environment = ["MONGO_URL", "DB_NAME", "CORS_ORIGINS", "SMTP_SERVER", "SMTP_PORT", "SMTP_USERNAME", "SMTP_PASSWORD", "SMTP_USE_SSL", "OPERATIONS_EMAIL"]
-
-[[services]]
-name = "frontend" 
-build = "cd frontend && yarn install && yarn build"
-start = "cd frontend && yarn start"
-environment = ["REACT_APP_BACKEND_URL"]
+builder = "NIXPACKS"
 
 [deploy]
-startCommand = "echo 'Railway deployment configured'"
+startCommand = "cd backend && python3 -m uvicorn server:app --host 0.0.0.0 --port $PORT"
